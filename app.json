@@ -8,6 +8,10 @@
     "scheme": "dhoobigo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "extra": {
+      "apiUrl": "http://192.168.18.143:3000",
+      "apiUrlProduction": "http://192.168.18.143:3000"
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -39,7 +43,6 @@
           }
         }
       ]
-     
     ],
     "experiments": {
       "reactCompiler": true

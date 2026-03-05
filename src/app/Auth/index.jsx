@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
-import { exisingUserCheck } from '../../store/slices/AuthSlice';
+import { AuthenticateUser, } from '../../store/slices/AuthSlice';
 
 export default function Auth() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -36,11 +36,11 @@ export default function Auth() {
 };
   const handleContinue = () => {
     console.log("Phone number to check:", phoneNumber);
-    dispatch(exisingUserCheck(phoneNumber));
-    router.push({
-      pathname: '/Auth/OTPVerfication',
-      params: { phoneNumber: phoneNumber }
-    })
+    dispatch(AuthenticateUser(phoneNumber));
+    // router.push({
+    //   pathname: '/Auth/OTPVerfication',
+    //   params: { phoneNumber: phoneNumber }
+    // })
   }
   return (
     <SafeAreaView>
