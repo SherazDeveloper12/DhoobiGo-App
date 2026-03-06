@@ -1,17 +1,28 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MailOpen, Smartphone } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { verifyOtp } from '../../../store/slices/AuthSlice';
 
 export default function OTPVerification() {
   const [otp, setOtp] = useState('');
   const dispatch = useDispatch();
+  const router = useRouter();
   const {phoneNumber} = useLocalSearchParams();
-  console.log("Phone number in OTPVerification: ", phoneNumber);
-  const verifyOtp = () => {
-    dispatch(verifyOtp({ otp, phoneNumber }));
+  const user = useSelector((state) => state.auth.user);
+ useEffect(()=>{
+  console.log("User in OTP Verification:", user);
+  if(user){
+  router.push({
+    pathname: '/',
+  })
+  }
+ },[user])
+  const handleVerifyOtp = () => {
+    const otpData = { otpCode: otp, phoneNumber }
+    dispatch(verifyOtp(otpData));
   };
   const resendOtp = () => {
     // Implement OTP resend logic here
@@ -38,7 +49,8 @@ export default function OTPVerification() {
             value={otp}
             onChangeText={setOtp}
           />
-          <Pressable className="bg-blue-500 rounded-md p-2 w-full flex flex-row items-center justify-center gap-2" onPress={verifyOtp}>
+          <Pressable className="bg-blue-500 rounded-md p-2 w-full flex flex-row items-center justify-center gap-2" 
+          onPress={() => handleVerifyOtp()}>
             <Text className="text-white text-center text-2xl font-bold">Verify OTP</Text>
           </Pressable>
         </View>

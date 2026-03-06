@@ -1,17 +1,18 @@
 import { useRouter } from 'expo-router';
 import { ArrowBigRight } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useDispatch } from 'react-redux';
-import { AuthenticateUser, } from '../../store/slices/AuthSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { AuthenticateUser, resetotpState, } from '../../store/slices/AuthSlice';
 
 export default function Auth() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isvalid, setIsValid] = useState(false);
+  const otpSent = useSelector((state) => state.auth.otpSent);
   const dispatch = useDispatch();
   const router = useRouter();
-  console.log("valid ", isvalid)
+ 
  const handlePhoneChange = (text) => {
   // Always keep +923
   if (!text.startsWith('+923')) {
@@ -32,16 +33,24 @@ export default function Auth() {
     setIsValid(true);
   }
   
-  console.log("Digits: ", digits, "IsValid: ", digits.length === 9);
 };
   const handleContinue = () => {
-    console.log("Phone number to check:", phoneNumber);
     dispatch(AuthenticateUser(phoneNumber));
-    // router.push({
-    //   pathname: '/Auth/OTPVerfication',
-    //   params: { phoneNumber: phoneNumber }
-    // })
   }
+  useEffect(()=>{
+    if(otpSent===true){
+       router.push({
+      pathname: 'Auth/OTPVerfication/OTPVerification',
+      params: { phoneNumber: phoneNumber }
+    })
+    }
+  },[otpSent])
+  useEffect(()=>{
+     dispatch(resetotpState());
+    return () => {
+      dispatch(resetotpState());
+    }
+  },[])
   return (
     <SafeAreaView>
       <View className="p-4 flex justify-center gap-4 ">
