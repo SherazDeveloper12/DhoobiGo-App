@@ -3,6 +3,7 @@ import axios from "axios";
 import * as SecureStore from 'expo-secure-store';
 
 import Constant from "expo-constants";
+
 const BASE_URL = Constant.expoConfig.extra.apiUrl;
 const initialState = {
 
@@ -34,6 +35,7 @@ export const verifyOtp = createAsyncThunk(
     'auth/verifyOtp',
     async (otpData) => {
         try {
+            console.log("Verifying OTP with data: ", otpData);
             const response = await axios.post(`${BASE_URL}/auth/authenticateUser`, otpData);
             await SecureStore.setItemAsync('token', response.data.token);
             return response.data;
@@ -57,7 +59,8 @@ export const userProfile = createAsyncThunk(
                     Authorization: `${token}`,
                 },
             });
-            return response.data;
+
+            return response.data.user;
         } catch (error) {
             if (error.response) {
                 console.error("Error response from fetching user profile: ", error);
@@ -75,12 +78,45 @@ export const fetchTokenFromStorage = createAsyncThunk(
             const token = await SecureStore.getItemAsync('token');
             if (token) {
                 return token;
-            }else{
-                throw new Error("No token found in storage");
-            }
-
+            } 
+            return null;
         } catch (error) {
             console.error("Error fetching token from storage: ", error);
+            throw error;
+        }
+    });
+
+export const updateUserProfile = createAsyncThunk(
+    'auth/updateUserProfile',
+    async (profileData, { getState }) => {
+        try {
+            const state = getState();
+            const token = state.auth.token;
+            const _id = state.auth.user._id;
+            const response = await axios.put(`${BASE_URL}/auth/users/${_id}`, profileData, {
+                headers: {
+                    Authorization: `${token}`,
+                },
+            });
+            return response.data;
+        } catch (error) {
+            if (error.response) {
+                console.error("Error response from updating user profile: ", error);
+                throw new Error(error.response.data.message);
+            }
+            console.error("Error during updating user profile: ", error);
+            throw error;
+        }
+    }
+);
+
+export const logoutUser = createAsyncThunk(
+    'auth/logoutUser',
+    async () => {
+        try {
+            await SecureStore.deleteItemAsync('token');
+            return true;
+        } catch (error) {
             throw error;
         }
     });
@@ -99,7 +135,7 @@ export const authSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(AuthenticateUser.pending, (state) => {
-                state.loading = true;
+                // state.loading = true;
             })
             .addCase(AuthenticateUser.fulfilled, (state, action) => {
 
@@ -133,7 +169,9 @@ export const authSlice = createSlice({
                 state.loading = true;
             })
             .addCase(fetchTokenFromStorage.fulfilled, (state, action) => {
-                state.token = action.payload;
+                if (action.payload) {
+                    state.token = action.payload;
+                }
                 state.loading = false;
             })
             .addCase(fetchTokenFromStorage.rejected, (state, action) => {
@@ -150,7 +188,33 @@ export const authSlice = createSlice({
             .addCase(userProfile.rejected, (state, action) => {
                 console.error("Fetching user profile failed: ", action.error.message);
                 state.loading = false;
-            });
+            })
+            .addCase(updateUserProfile.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(updateUserProfile.fulfilled, (state, action) => {
+                state.user = action.payload;
+                state.loading = false;
+            })
+            .addCase(updateUserProfile.rejected, (state, action) => {
+                console.error("Updating user profile failed: ", action.error.message);
+                state.loading = false;
+            })
+            .addCase(logoutUser.fulfilled, (state) => {
+                state.user = null;
+                state.token = null;
+                state.otpSent = false;
+                state.status = null;
+                state.error = null;
+                state.loading = false;
+            })
+            .addCase(logoutUser.rejected, (state, action) => {
+                console.error("Logout failed: ", action.error.message);
+                state.loading = false;
+            })
+            .addCase(logoutUser.pending, (state) => {
+                state.loading = true;
+            })
     }
 });
 

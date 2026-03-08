@@ -4,14 +4,18 @@ import { useEffect, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
-import { verifyOtp } from '../../../store/slices/AuthSlice';
+import { verifyOtp } from '../../store/slices/AuthSlice';
 
 export default function OTPVerification() {
   const [otp, setOtp] = useState('');
   const dispatch = useDispatch();
   const router = useRouter();
-  const {phoneNumber} = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  console.log("Params in OTP Verification: ", params);
+  const phoneNumber = params.phoneNumber;
+  console.log("Phone number from params: ", phoneNumber);
   const user = useSelector((state) => state.auth.user);
+  const otpSent = useSelector((state) => state.auth.otpSent);
  useEffect(()=>{
   console.log("User in OTP Verification:", user);
   if(user){
@@ -19,9 +23,15 @@ export default function OTPVerification() {
     pathname: '/',
   })
   }
- },[user])
+  if (otpSent === false){
+    router.push({
+      pathname: '/Auth/Auth',
+    })
+  }
+ },[user, otpSent])
   const handleVerifyOtp = () => {
-    const otpData = { otpCode: otp, phoneNumber }
+    const otpData = { otpCode: otp, phoneNumber: phoneNumber };
+    console.log("OTP Data to be sent for verification: ", otpData);
     dispatch(verifyOtp(otpData));
   };
   const resendOtp = () => {
